@@ -1,15 +1,33 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shop_app/data/categories.dart';
 
-class NewItem extends StatelessWidget {
-  const NewItem({super.key});
+import '../models/category.dart';
+
+class NewItem extends StatefulWidget {
+   NewItem({super.key});
+
+  @override
+  State<NewItem> createState() => _NewItemState();
+}
+
+class _NewItemState extends State<NewItem> {
+  final _formKey = GlobalKey<FormState>();
+
+   var enteredName = '';
+
+   int enteredQuantity = 1;
+
+   GroceryCategory? selectedCategory = categories[Categories.dairy];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Add a new item'),),
       body: Form(
+        key: _formKey,
           child: Column(
             children: [
               TextFormField(
@@ -22,6 +40,9 @@ class NewItem extends StatelessWidget {
                   }
                   return null;
                 },
+                onSaved: (value){
+                  enteredName = value!;
+                },
                 maxLength: 50,
               ),
               Row(
@@ -32,12 +53,15 @@ class NewItem extends StatelessWidget {
                     decoration: InputDecoration(
                         labelText: 'Quantity'
                     ),
-                    validator: (value){
-                      if(value == null || value.isEmpty ){
-                        return 'must be not empty';
+                    validator: (String ? value){
+                      if(int.tryParse(value!) == null || int.tryParse(value)!<=0 ){
+                        return 'must be valid , positive number';
                       }
                       return null;
                     },
+                      onSaved: (value){
+                      enteredQuantity = int.tryParse(value!)!;
+                      },
                       keyboardType: TextInputType.number,
                   ),
                   ),
@@ -58,11 +82,14 @@ class NewItem extends StatelessWidget {
                                       Text(category.value.title),
                                     ],
                                   ),
-                                
+
                               )
                           ],
-                          onChanged: (value){
-
+                          value: selectedCategory,
+                          onChanged: (GroceryCategory? value){
+                              setState(() {
+                                selectedCategory = value!;
+                              });
                           }
                       )
                   )
@@ -73,12 +100,21 @@ class NewItem extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                      onPressed: (){},
+                      onPressed: (){
+                        _formKey.currentState!.reset();
+                      },
                       child: Text("Reset")
                   ),
 
                   ElevatedButton(
-                      onPressed: (){},
+                      onPressed: (){
+                        if(_formKey.currentState!.validate()){
+                          _formKey.currentState!.save();
+                          log(enteredName);
+                          log(enteredQuantity.toString());
+                          log(selectedCategory.toString());
+                        }
+                      },
                       child: Text("Add Item")
                   )
                 ],
