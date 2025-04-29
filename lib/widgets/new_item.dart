@@ -1,13 +1,14 @@
+import 'dart:convert';
 import 'dart:developer';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shop_app/data/categories.dart';
-
+import 'package:shop_app/models/grocery_items.dart';
 import '../models/category.dart';
+import 'package:http/http.dart' as http;
 
 class NewItem extends StatefulWidget {
-   NewItem({super.key});
+   const NewItem({super.key});
 
   @override
   State<NewItem> createState() => _NewItemState();
@@ -15,11 +16,8 @@ class NewItem extends StatefulWidget {
 
 class _NewItemState extends State<NewItem> {
   final _formKey = GlobalKey<FormState>();
-
    var enteredName = '';
-
    int enteredQuantity = 1;
-
    GroceryCategory? selectedCategory = categories[Categories.dairy];
 
   @override
@@ -82,7 +80,6 @@ class _NewItemState extends State<NewItem> {
                                       Text(category.value.title),
                                     ],
                                   ),
-
                               )
                           ],
                           value: selectedCategory,
@@ -107,12 +104,25 @@ class _NewItemState extends State<NewItem> {
                   ),
 
                   ElevatedButton(
-                      onPressed: (){
+                      onPressed: () async {
                         if(_formKey.currentState!.validate()){
                           _formKey.currentState!.save();
-                          log(enteredName);
-                          log(enteredQuantity.toString());
-                          log(selectedCategory.toString());
+                          final url = Uri.https('shopapp-56012-default-rtdb.firebaseio.com','shopping_list.json');
+                          final http.Response response =  await http.post(
+                              url,
+                            headers: {
+                                'Content-Type':'application/json'
+                            },
+                            body:json.encode({
+                                'name':enteredName,
+                              'quantity':enteredQuantity,
+                              'category':selectedCategory?.title
+                            })
+                          );
+                          if(response.statusCode == 200){
+                            log(response.body);
+                            Navigator.of(context).pop();
+                          }
                         }
                       },
                       child: Text("Add Item")
